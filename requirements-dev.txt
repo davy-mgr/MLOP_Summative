@@ -1,0 +1,6 @@
+-r requirements.txt
+-r requirements-ui.txt
+locust
+tabulate
+jupyter
+seaborn

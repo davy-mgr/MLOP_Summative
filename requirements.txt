@@ -1,0 +1,10 @@
+tensorflow-cpu>=2.16,<2.19
+numpy<2
+librosa==0.10.2.post1
+soundfile
+scikit-learn
+pandas
+matplotlib
+fastapi
+uvicorn[standard]
+python-multipart

@@ -1,0 +1,11 @@
+__pycache__/
+.ipynb_checkpoints/
+data/cache/
+data/uploads/
+data/train/*/
+data/test/*/
+results/*.csv
+results/*.html
+models/versions/
+*.pyc
+.env
