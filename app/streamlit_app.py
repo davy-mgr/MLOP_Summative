@@ -1,4 +1,4 @@
-"""Streamlit dashboard: predict, visualise, upload + retrain, monitor."""
+﻿"""Streamlit dashboard: predict, visualise, upload + retrain, monitor."""
 import os
 import time
 
@@ -76,7 +76,8 @@ elif page == "Visualizations":
                   "zero_crossing_rate": "Zero-crossing rate", "rms": "RMS energy"}
         for col, key in zip(cols, titles):
             fig, ax = plt.subplots(figsize=(5, 4))
-            ax.boxplot([feats[c][key] for c in feats], labels=list(feats), vert=False)
+            ax.boxplot([feats[c][key] for c in feats])
+            ax.set_xticklabels(list(feats), rotation=90, fontsize=8)
             ax.set_title(titles[key])
             col.pyplot(fig)
         st.caption("Centroid and ZCR track how 'bright' or noisy a sound is; RMS tracks loudness. "
@@ -183,3 +184,4 @@ else:
         st.dataframe(pd.DataFrame(m["versions"]), use_container_width=True)
     if st.button("Refresh"):
         st.rerun()
+

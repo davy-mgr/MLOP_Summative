@@ -1,4 +1,4 @@
-# UrbanSound8K Sound Classification - End-to-End ML Pipeline
+﻿# UrbanSound8K Sound Classification - End-to-End ML Pipeline
 
 **Video demo:** <YOUTUBE LINK>  
 **Live app (UI):** <URL>  **API docs:** <URL>/docs  
@@ -18,7 +18,7 @@ notebook/urbansound_classification.ipynb   EDA, preprocessing, training, evaluat
 src/   config.py  data_acquisition.py  preprocessing.py  model.py  prediction.py  visualization.py
 api/main.py            FastAPI service
 app/streamlit_app.py   UI (predict / visualisations / upload + retrain / monitoring)
-locust/                load test + scaling script
+loadtest/                load test + scaling script
 data/train, data/test  class-per-folder .wav files (built from UrbanSound8K)
 models/urbansound_cnn.h5   live model;  registry.json = version history + metrics
 ```
@@ -38,12 +38,12 @@ python -c "from src.model import train_model; train_model(40)"
 uvicorn api.main:app --port 8000            # docs at http://localhost:8000/docs
 API_URL=http://localhost:8000 streamlit run app/streamlit_app.py
 ```
-Docker: `docker compose up --build` → UI http://localhost:8501, API http://localhost:8000.
+Docker: `docker compose up --build` â†’ UI http://localhost:8501, API http://localhost:8000.
 
 ## API
 | Endpoint | Purpose |
 |---|---|
-| `POST /predict` | one .wav → class, confidence, probabilities |
+| `POST /predict` | one .wav â†’ class, confidence, probabilities |
 | `POST /upload` | many .wav files + `label`, or .zip with `<class>/*.wav` folders |
 | `POST /retrain` | fine-tune (or `from_scratch=true`) on train + uploaded data |
 | `POST /train` | train from scratch on the original data |
@@ -62,7 +62,7 @@ live model if its test accuracy is within 2 points of the current model; every v
 
 ## Flood-request simulation (Locust)
 ```bash
-bash locust/run_loadtest.sh 50 10 60s      # 50 users, spawn 10/s, 60 s, for 1 / 2 / 3 API containers
+bash loadtest/run_loadtest.sh 50 10 60s      # 50 users, spawn 10/s, 60 s, for 1 / 2 / 3 API containers
 ```
 | API containers | Requests | Failures | Avg (ms) | Median (ms) | p95 (ms) | Req/s |
 |---|---|---|---|---|---|---|

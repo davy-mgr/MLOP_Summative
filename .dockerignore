@@ -1,6 +1,6 @@
 .git
+.venv
 notebook
 results
-data/cache
-data/uploads
+data
 **/__pycache__
