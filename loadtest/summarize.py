@@ -1,4 +1,3 @@
-"""Turn results/containers_N_stats.csv into a Markdown table for the README."""
 import pandas as pd
 from pathlib import Path
 

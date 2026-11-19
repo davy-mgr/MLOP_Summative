@@ -1,4 +1,3 @@
-"""FastAPI service: predict, upload, train/retrain, status, metrics, visualisation data."""
 import io
 import sys
 import threading
@@ -15,15 +14,15 @@ from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from src import model as ml                      # noqa: E402
-from src import prediction, visualization        # noqa: E402
-from src.config import AUTO_RETRAIN_THRESHOLD, CLASSES, UPLOAD_DIR  # noqa: E402
+from src import model as ml
+from src import prediction, visualization
+from src.config import AUTO_RETRAIN_THRESHOLD, CLASSES, UPLOAD_DIR 
 
 app = FastAPI(title="UrbanSound8K Classifier API")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 STARTED = time.time()
-latencies = deque(maxlen=500)          # seconds, for production monitoring
+latencies = deque(maxlen=500)
 counters = {"predictions": 0, "errors": 0}
 
 job_lock = threading.Lock()
@@ -35,7 +34,6 @@ def _now():
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-# ----------------------------------------------------------------------- background jobs
 def start_job(kind, runner, epochs):
     """runner(progress_cb) -> result dict. Returns False if a job is already running."""
     with job_lock:
@@ -54,7 +52,7 @@ def start_job(kind, runner, epochs):
             job.update(result={k: res[k] for k in ("version", "promoted", "n_train", "n_new_files")} |
                        {"accuracy": res["metrics"]["accuracy"], "f1_macro": res["metrics"]["f1_macro"]},
                        message="finished")
-        except Exception as exc:                     # noqa: BLE001
+        except Exception as exc:
             job.update(error=str(exc), message="failed")
         finally:
             job.update(running=False, finished_at=_now())
@@ -62,8 +60,6 @@ def start_job(kind, runner, epochs):
     threading.Thread(target=run, daemon=True).start()
     return True
 
-
-# ----------------------------------------------------------------------- health / status
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -100,8 +96,6 @@ def metrics():
          "accuracy": v["metrics"]["accuracy"], "f1_macro": v["metrics"]["f1_macro"]}
         for v in reg["versions"]]}
 
-
-# ----------------------------------------------------------------------- prediction
 @app.post("/predict")
 def predict(file: UploadFile = File(...), spectrogram: bool = Query(False)):
     data = file.file.read()
@@ -110,7 +104,7 @@ def predict(file: UploadFile = File(...), spectrogram: bool = Query(False)):
         result = prediction.predict(io.BytesIO(data), return_spectrogram=spectrogram)
     except FileNotFoundError:
         raise HTTPException(503, "No trained model yet. POST /train first.")
-    except Exception as exc:                         # noqa: BLE001
+    except Exception as exc:
         counters["errors"] += 1
         raise HTTPException(400, f"Could not process audio: {exc}")
     dt_s = time.perf_counter() - t0
@@ -119,12 +113,10 @@ def predict(file: UploadFile = File(...), spectrogram: bool = Query(False)):
     result["latency_ms"] = round(dt_s * 1000, 1)
     return result
 
-
-# ----------------------------------------------------------------------- bulk upload
 def _save_wav(data: bytes, label: str):
     try:
         sf.info(io.BytesIO(data))
-    except Exception:                                # noqa: BLE001
+    except Exception:
         return False
     d = UPLOAD_DIR / label
     d.mkdir(parents=True, exist_ok=True)
@@ -162,13 +154,11 @@ def upload(files: list[UploadFile] = File(...), label: str = Form(None)):
 
     pending = ml.count_uploads()
     auto = False
-    if pending >= AUTO_RETRAIN_THRESHOLD:            # automatic retraining trigger
+    if pending >= AUTO_RETRAIN_THRESHOLD:
         auto = start_job("auto-retrain", lambda cb: ml.retrain_model(10, False, cb), 10)
     return {"saved": saved, "rejected": rejected, "pending_uploads": pending,
             "auto_retrain_started": auto}
 
-
-# ----------------------------------------------------------------------- train / retrain
 @app.post("/train")
 def train(epochs: int = Query(40, ge=1, le=200)):
     if not start_job("train", lambda cb: ml.train_model(epochs, cb), epochs):
@@ -189,8 +179,6 @@ def retrain(epochs: int = Query(15, ge=1, le=200), from_scratch: bool = Query(Fa
 def retrain_status():
     return job
 
-
-# ----------------------------------------------------------------------- visualisation data
 @app.get("/viz/class-distribution")
 def viz_distribution():
     return visualization.class_distribution()

@@ -1,5 +1,4 @@
-﻿"""Streamlit dashboard: predict, visualise, upload + retrain, monitor."""
-import os
+﻿import os
 import time
 
 import matplotlib.pyplot as plt
@@ -35,7 +34,6 @@ def fmt_uptime(s):
 page = st.sidebar.radio("Page", ["Predict", "Visualizations", "Upload & Retrain", "Monitoring"])
 st.sidebar.caption(f"API: {API}")
 
-# ------------------------------------------------------------------ Predict
 if page == "Predict":
     st.title("Urban sound classification")
     f = st.file_uploader("Upload a .wav clip (up to ~4 s)", type=["wav"])
@@ -55,7 +53,6 @@ if page == "Predict":
                 ax.set(title="Log-mel spectrogram", xlabel="frames", ylabel="mel bin")
                 c2.pyplot(fig)
 
-# ------------------------------------------------------------------ Visualizations
 elif page == "Visualizations":
     st.title("What does the data look like?")
     dist = api("GET", "/viz/class-distribution")
@@ -95,7 +92,6 @@ elif page == "Visualizations":
                    "(gun shot) show a short vertical burst, and steady machinery (air conditioner, "
                    "engine idling) shows a smooth low-frequency-heavy texture.")
 
-# ------------------------------------------------------------------ Upload & Retrain
 elif page == "Upload & Retrain":
     st.title("Upload new data and retrain")
     st.markdown("Upload **many .wav files with a class label**, or a **.zip** whose sub-folders are named "
@@ -139,7 +135,6 @@ elif page == "Upload & Retrain":
                            f"macro-F1 {r['f1_macro']:.3f}, "
                            f"{'promoted to live model' if r['promoted'] else 'NOT promoted (worse than current)'}")
 
-# ------------------------------------------------------------------ Monitoring
 else:
     st.title("Model monitoring")
     s = api("GET", "/status")

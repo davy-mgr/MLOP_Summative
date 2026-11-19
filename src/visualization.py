@@ -1,4 +1,3 @@
-"""Data behind the dashboard visualisations (class balance, spectral features, mean spectrograms)."""
 import json
 import random
 
@@ -17,7 +16,6 @@ def class_distribution():
 
 
 def compute_viz(sample_per_class=20, force=False):
-    """Per-class spectral centroid / zero-crossing rate / RMS plus the mean log-mel spectrogram."""
     if VIZ_CACHE.exists() and not force:
         return json.loads(VIZ_CACHE.read_text())
     rng, feats, specs = random.Random(42), {}, {}

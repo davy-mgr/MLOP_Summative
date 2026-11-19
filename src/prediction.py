@@ -1,4 +1,3 @@
-"""Load the live model and predict a single audio clip."""
 import threading
 
 import numpy as np
@@ -22,14 +21,12 @@ def get_model():
 
 
 def reload_model():
-    """Call after retraining so the API serves the new weights."""
     global _model
     with _lock:
         _model = None
 
 
 def predict(source, return_spectrogram=False):
-    """source: path or file-like (.wav). Returns predicted class, confidence and all probabilities."""
     model = get_model()
     y = load_audio(source)
     x = mel_db(y)

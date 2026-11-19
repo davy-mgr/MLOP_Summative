@@ -1,7 +1,7 @@
 services:
   api:
     build: .
-    cpus: "1.0"            # fixed CPU per container so scaling effects are visible in the load test
+    cpus: "1.0"
     volumes:
       - ./data:/app/data
       - ./models:/app/models

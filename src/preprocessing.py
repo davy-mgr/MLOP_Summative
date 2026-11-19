@@ -1,4 +1,3 @@
-"""Audio -> log-mel spectrogram features."""
 import hashlib
 from pathlib import Path
 
@@ -9,7 +8,6 @@ from .config import (CACHE_DIR, CLASSES, HOP_LENGTH, N_FFT, N_MELS, N_SAMPLES, S
 
 
 def load_audio(source):
-    """Load a path or file-like object as mono, SR Hz, padded/trimmed to a fixed length."""
     y, _ = librosa.load(source, sr=SR, mono=True, duration=4.0)
     if len(y) < N_SAMPLES:
         y = np.pad(y, (0, N_SAMPLES - len(y)))
@@ -17,7 +15,6 @@ def load_audio(source):
 
 
 def mel_db(y, normalize=True):
-    """Log-mel spectrogram in dB, shape (N_MELS, frames, 1)."""
     m = librosa.feature.melspectrogram(y=y, sr=SR, n_fft=N_FFT, hop_length=HOP_LENGTH, n_mels=N_MELS)
     db = librosa.power_to_db(m, ref=1.0, top_db=80.0)
     if normalize:
@@ -45,7 +42,6 @@ def features_cached(path):
 
 
 def list_files(root):
-    """[(path, class_name)] for root/<class>/*.wav, ordered by CLASSES."""
     root, out = Path(root), []
     for c in CLASSES:
         d = root / c
@@ -55,11 +51,6 @@ def list_files(root):
 
 
 def load_dataset(roots, verbose=True):
-    """Return X, y, groups, paths for one or more root folders.
-
-    `groups` = freesound id of the source recording (first token of the UrbanSound8K filename),
-    used so a validation split never shares a recording with the training split.
-    """
     roots = [roots] if isinstance(roots, (str, Path)) else roots
     files = [f for r in roots for f in list_files(r)]
     if not files:

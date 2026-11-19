@@ -1,4 +1,3 @@
-"""Load test: python -m locust -f locust/locustfile.py --host http://localhost:8000"""
 import random
 from pathlib import Path
 
@@ -6,7 +5,7 @@ from locust import HttpUser, between, task
 
 ROOT = Path(__file__).resolve().parents[1]
 SAMPLES = []
-for p in sorted((ROOT / "data" / "test").rglob("*.wav"))[:: 20][:40]:      # ~40 spread-out clips
+for p in sorted((ROOT / "data" / "test").rglob("*.wav"))[:: 20][:40]:
     SAMPLES.append((p.name, p.read_bytes()))
 assert SAMPLES, "No .wav files in data/test - run src.data_acquisition first"
 

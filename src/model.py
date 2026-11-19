@@ -1,4 +1,3 @@
-"""Model definition, training, evaluation, versioning and retraining."""
 import datetime as dt
 import json
 import shutil
@@ -15,9 +14,7 @@ from .config import (CACHE_DIR, CLASSES, INPUT_SHAPE, MODEL_PATH, MODELS_DIR,
                      REGISTRY_PATH, TEST_DIR, TRAIN_DIR, UPLOAD_DIR)
 from .preprocessing import load_dataset
 
-# ------------------------------------------------------------------ architectures
 def build_baseline(input_shape=INPUT_SHAPE, n_classes=len(CLASSES)):
-    """Simple CNN with no regularisation - used as the comparison baseline."""
     return models.Sequential([
         layers.Input(input_shape),
         layers.Conv2D(16, 3, activation="relu"), layers.MaxPooling2D(),
@@ -28,7 +25,6 @@ def build_baseline(input_shape=INPUT_SHAPE, n_classes=len(CLASSES)):
 
 
 def build_cnn(input_shape=INPUT_SHAPE, n_classes=len(CLASSES)):
-    """Optimised CNN: BatchNorm + Dropout + L2 + global pooling."""
     reg = regularizers.l2(1e-4)
     m = models.Sequential([layers.Input(input_shape)], name="urbansound_cnn")
     for f in (32, 64, 128):
@@ -43,9 +39,7 @@ def build_cnn(input_shape=INPUT_SHAPE, n_classes=len(CLASSES)):
     return m
 
 
-# ------------------------------------------------------------------ training helpers
 def fit_model(model, X, y, groups, epochs=40, lr=1e-3, progress=None, batch_size=32):
-    """Group-aware train/val split, class weights, early stopping. Returns history dict."""
     tr, va = next(GroupShuffleSplit(1, test_size=0.15, random_state=42).split(X, y, groups))
     classes = np.unique(y[tr])
     cw = dict(zip(map(int, classes), compute_class_weight("balanced", classes=classes, y=y[tr])))
@@ -64,7 +58,6 @@ def _clean(obj):
 
 
 def evaluate(model, X, y):
-    """Accuracy, loss, macro precision/recall/F1, per-class report and confusion matrix."""
     probs = model.predict(X, batch_size=64, verbose=0)
     pred = probs.argmax(1)
     p, r, f, _ = precision_recall_fscore_support(y, pred, average="macro", zero_division=0)
@@ -79,8 +72,6 @@ def evaluate(model, X, y):
         "n_test": int(len(y)),
     })
 
-
-# ------------------------------------------------------------------ registry / versioning
 def load_registry():
     if REGISTRY_PATH.exists():
         return json.loads(REGISTRY_PATH.read_text())
@@ -112,14 +103,11 @@ def _register(model, history, metrics, kind, n_train, n_new, force_promote):
     REGISTRY_PATH.write_text(json.dumps(reg, indent=2))
     return entry
 
-
-# ------------------------------------------------------------------ uploads
 def count_uploads():
     return sum(1 for c in CLASSES if (UPLOAD_DIR / c).is_dir() for _ in (UPLOAD_DIR / c).glob("*.wav"))
 
 
 def merge_uploads():
-    """Move uploaded files into data/train so they become part of the permanent training set."""
     n = 0
     for c in CLASSES:
         d = UPLOAD_DIR / c
@@ -132,7 +120,6 @@ def merge_uploads():
     return n
 
 
-# ------------------------------------------------------------------ public entry points
 def _test_set():
     Xt, yt, _, _ = load_dataset([TEST_DIR], verbose=False)
     if len(yt) == 0:
@@ -141,7 +128,6 @@ def _test_set():
 
 
 def train_model(epochs=40, progress=None):
-    """Train the optimised CNN from scratch on data/train and register it as a new version."""
     X, y, g, _ = load_dataset([TRAIN_DIR])
     if len(y) == 0:
         raise ValueError("data/train is empty - run `python -m src.data_acquisition` first.")
@@ -152,12 +138,6 @@ def train_model(epochs=40, progress=None):
 
 
 def retrain_model(epochs=15, from_scratch=False, progress=None):
-    """Retrain on data/train + data/uploads.
-
-    Default = fine-tune the current model with a lower learning rate (fast).
-    `from_scratch=True` rebuilds the model. A new version is only promoted to the live model if its
-    test accuracy is not more than 2 points worse than the current one.
-    """
     n_new = count_uploads()
     if n_new == 0:
         raise ValueError("No uploaded data waiting - upload labelled files first.")
