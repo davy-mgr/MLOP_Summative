@@ -38,18 +38,35 @@ def build_cnn(input_shape=INPUT_SHAPE, n_classes=len(CLASSES)):
     m.add(layers.Dense(n_classes, activation="softmax"))
     return m
 
+def _augment(x, y):
+    M, T = tf.shape(x)[0], tf.shape(x)[1]
+    x = tf.roll(x, tf.random.uniform([], -(T // 5), T // 5 + 1, dtype=tf.int32), axis=1)
+    f = tf.random.uniform([], 0, 9, dtype=tf.int32)
+    f0 = tf.random.uniform([], 0, M - f, dtype=tf.int32)
+    t = tf.random.uniform([], 0, 31, dtype=tf.int32)
+    t0 = tf.random.uniform([], 0, T - t, dtype=tf.int32)
+    fmask = ((tf.range(M) >= f0) & (tf.range(M) < f0 + f))[:, None, None]
+    tmask = ((tf.range(T) >= t0) & (tf.range(T) < t0 + t))[None, :, None]
+    x = tf.where(fmask | tmask, tf.zeros_like(x), x)       # 0 = the clip mean after standardising
+    return x + tf.random.normal(tf.shape(x), stddev=0.05), y
 
-def fit_model(model, X, y, groups, epochs=40, lr=1e-3, progress=None, batch_size=32):
+
+def fit_model(model, X, y, groups, epochs=40, lr=1e-3, progress=None, batch_size=32, augment=True):
     tr, va = next(GroupShuffleSplit(1, test_size=0.15, random_state=42).split(X, y, groups))
     classes = np.unique(y[tr])
     cw = dict(zip(map(int, classes), compute_class_weight("balanced", classes=classes, y=y[tr])))
     model.compile(optimizer=optimizers.Adam(lr), loss="sparse_categorical_crossentropy", metrics=["accuracy"])
-    cbs = [callbacks.EarlyStopping(monitor="val_loss", patience=8, restore_best_weights=True),
+    cbs = [callbacks.EarlyStopping(monitor="val_loss", patience=10, restore_best_weights=True),
            callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=3)]
     if progress:
         cbs.append(callbacks.LambdaCallback(on_epoch_end=lambda e, logs: progress(e, logs)))
-    h = model.fit(X[tr], y[tr], validation_data=(X[va], y[va]), epochs=epochs,
-                  batch_size=batch_size, class_weight=cw, callbacks=cbs, verbose=2)
+    train_ds = tf.data.Dataset.from_tensor_slices((X[tr], y[tr])).shuffle(len(tr), seed=42)
+    if augment:
+        train_ds = train_ds.map(_augment, num_parallel_calls=tf.data.AUTOTUNE)
+    train_ds = train_ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    val_ds = tf.data.Dataset.from_tensor_slices((X[va], y[va])).batch(batch_size)
+    h = model.fit(train_ds, validation_data=val_ds, epochs=epochs,
+                  class_weight=cw, callbacks=cbs, verbose=2)
     return {k: [round(float(v), 4) for v in vals] for k, vals in h.history.items() if k != "lr"}
 
 
@@ -102,6 +119,7 @@ def _register(model, history, metrics, kind, n_train, n_new, force_promote):
     reg["versions"].append(entry)
     REGISTRY_PATH.write_text(json.dumps(reg, indent=2))
     return entry
+
 
 def count_uploads():
     return sum(1 for c in CLASSES if (UPLOAD_DIR / c).is_dir() for _ in (UPLOAD_DIR / c).glob("*.wav"))
