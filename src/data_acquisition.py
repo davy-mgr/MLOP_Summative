@@ -1,12 +1,3 @@
-"""Build data/train and data/test from a downloaded UrbanSound8K folder.
-
-Usage:
-    python -m src.data_acquisition --source /path/to/UrbanSound8K
-    python -m src.data_acquisition --source /path/to/UrbanSound8K --max-per-class 30   # small subset for deployment
-
-Folds 1-9 -> train, fold 10 -> test (the dataset authors warn against reshuffling across
-folds because clips from the same recording are in the same fold -> leakage).
-"""
 import argparse
 import shutil
 from pathlib import Path
@@ -27,7 +18,7 @@ def build_dataset(source, test_folds=(10,), max_per_class=None, out_dir=DATA_DIR
     copied = 0
     for _, r in meta.iterrows():
         src = source / "audio" / f"fold{r['fold']}" / r["slice_file_name"]
-        if not src.exists():                       # some copies of the dataset have no 'audio/' level
+        if not src.exists():
             src = source / f"fold{r['fold']}" / r["slice_file_name"]
         dst = out_dir / r["split"] / r["class"] / r["slice_file_name"]
         dst.parent.mkdir(parents=True, exist_ok=True)

@@ -47,7 +47,7 @@ def _augment(x, y):
     t0 = tf.random.uniform([], 0, T - t, dtype=tf.int32)
     fmask = ((tf.range(M) >= f0) & (tf.range(M) < f0 + f))[:, None, None]
     tmask = ((tf.range(T) >= t0) & (tf.range(T) < t0 + t))[None, :, None]
-    x = tf.where(fmask | tmask, tf.zeros_like(x), x)       # 0 = the clip mean after standardising
+    x = tf.where(fmask | tmask, tf.zeros_like(x), x)
     return x + tf.random.normal(tf.shape(x), stddev=0.05), y
 
 
