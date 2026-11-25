@@ -134,7 +134,7 @@ def merge_uploads():
             for p in list(d.glob("*.wav")):
                 shutil.move(str(p), str(TRAIN_DIR / c / p.name))
                 n += 1
-    (CACHE_DIR / "viz.json").unlink(missing_ok=True)   # visualisations must be recomputed
+    (CACHE_DIR / "viz.json").unlink(missing_ok=True)
     return n
 
 
