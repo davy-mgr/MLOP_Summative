@@ -1,3 +1,10 @@
+import soundfile as sf
+from scipy.signal import resample_poly
+from math import gcd
+
+from scipy.fft import rfft
+from scipy.signal.windows import hann
+
 import hashlib
 from pathlib import Path
 
@@ -8,19 +15,71 @@ from .config import (CACHE_DIR, CLASSES, HOP_LENGTH, N_FFT, N_MELS, N_SAMPLES, S
 
 
 def load_audio(source):
-    y, _ = librosa.load(source, sr=SR, mono=True, duration=4.0)
+    # Read WAV data directly as float32.
+    y, original_sr = sf.read(
+        source,
+        dtype="float32",
+        always_2d=True
+    )
+
+    # Convert stereo or multichannel audio to mono.
+    y = y.mean(axis=1)
+
+    # Resample only when the original sample rate differs.
+    if original_sr != SR:
+        divisor = gcd(int(original_sr), int(SR))
+        up = SR // divisor
+        down = int(original_sr) // divisor
+        y = resample_poly(y, up, down).astype(np.float32)
+
+    # Keep a maximum of four seconds.
+    y = y[:N_SAMPLES]
+
+    # Pad shorter clips to the model's required input length.
     if len(y) < N_SAMPLES:
         y = np.pad(y, (0, N_SAMPLES - len(y)))
-    return y[:N_SAMPLES]
+
+    return y.astype(np.float32)
+
+
+# Build the same Slaney-normalized mel filter bank used by Librosa.
+_MEL_FILTER = librosa.filters.mel(
+    sr=SR,
+    n_fft=N_FFT,
+    n_mels=N_MELS,
+    fmin=0.0,
+    fmax=SR / 2,
+    htk=False,
+    norm="slaney",
+    dtype=np.float32,
+)
+
+_STFT_WINDOW = hann(N_FFT, sym=False).astype(np.float32)
 
 
 def mel_db(y, normalize=True):
-    m = librosa.feature.melspectrogram(y=y, sr=SR, n_fft=N_FFT, hop_length=HOP_LENGTH, n_mels=N_MELS)
-    db = librosa.power_to_db(m, ref=1.0, top_db=80.0)
+    # Match Librosa's centered STFT with constant-zero padding.
+    y = np.asarray(y, dtype=np.float32)
+    y = np.pad(y, (N_FFT // 2, N_FFT // 2), mode="constant")
+
+    # Create overlapping frames without copying the entire signal.
+    frames = np.lib.stride_tricks.sliding_window_view(y, N_FFT)[::HOP_LENGTH]
+
+    # Hann-windowed power spectrogram.
+    spectrum = rfft(frames * _STFT_WINDOW, axis=-1)
+    power = (spectrum.real ** 2 + spectrum.imag ** 2).astype(np.float32)
+
+    # Apply the Librosa-compatible mel filter bank.
+    mel = _MEL_FILTER @ power.T
+
+    # Match librosa.power_to_db(ref=1.0, top_db=80.0).
+    db = 10.0 * np.log10(np.maximum(mel, 1e-10))
+    db = np.maximum(db, db.max() - 80.0)
+
     if normalize:
         db = (db - db.mean()) / (db.std() + 1e-6)
-    return db[..., None].astype("float32")
 
+    return db[..., None].astype(np.float32)
 
 def audio_to_features(source):
     return mel_db(load_audio(source))
