@@ -62,7 +62,7 @@ def _make_dataset(paths, labels, batch_size, shuffle=False, augment=False):
 def fit_model(
     model, paths, y, groups,
     epochs=40, lr=1e-3,
-    progress=None, batch_size=8,
+    progress=None, batch_size=1,
     augment=True
 ):
     paths = np.asarray(paths, dtype=str)

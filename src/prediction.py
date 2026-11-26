@@ -42,7 +42,13 @@ def get_model():
 def reload_model():
     global _model
     with _lock:
+        old_model = _model
         _model = None
+
+    del old_model
+
+    import gc
+    gc.collect()
 
 
 def predict(source, return_spectrogram=False):
