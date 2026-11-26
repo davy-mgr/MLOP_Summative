@@ -1,6 +1,6 @@
 ﻿# UrbanSound8K Sound Classification — End-to-End MLOps Pipeline
 
-**Video demonstration:** ADD YOUTUBE VIDEO URL
+**Video demonstration:** 
 
 **Cloud API:** https://urbansound-api-44471.containers.snapdeploy.app
 
@@ -8,7 +8,6 @@
 
 **Streamlit dashboard:** https://davy-mlopsummative.streamlit.app/
 
-**GitHub repository:** https://github.com/davy-mgr/MLOP_Summative
 
 ---
 
@@ -155,7 +154,7 @@ Docker is the recommended execution environment because it provides a consistent
 
 ### Dataset preparation
 
-Download and extract UrbanSound8K, then run:
+Download and extract UrbanSound8K from https://drive.google.com/drive/folders/1ESoHooW3ffwkYmXCVy1JLlqv_7zRsGdK?usp=sharing , then run:
 
 ```powershell
 python -m src.data_acquisition --source "C:\path\to\UrbanSound8K"
@@ -337,10 +336,6 @@ The Streamlit dashboard provides:
 
 The dashboard communicates with the FastAPI backend through the configured `API_URL`.
 
-The deployed dashboard is available at:
-
-https://davy-mlopsummative.streamlit.app/
-
 ## 10. Load Testing and Scalability
 
 Locust was used to evaluate API performance under simulated concurrent user requests.
@@ -357,39 +352,7 @@ The experiment tested three API container configurations.
 
 ### Interpretation
 
-All three configurations recorded zero failures in the reported Locust runs.
-
-However, increasing the number of API containers did not improve throughput in this experiment.
-
-The one-container configuration achieved the highest throughput at 5.0 requests per second and the lowest p95 latency at 3.2 seconds.
-
-The two- and three-container configurations experienced substantially higher tail latency and lower throughput.
-
-This suggests that adding replicas alone does not guarantee improved performance. Resource contention, container configuration, request distribution, and available CPU and memory can affect scalability.
-
-The benchmark results are retained in the `results/` directory.
-
-## 11. Cloud Deployment and Verification
-
-The FastAPI backend is deployed using SnapDeploy, while the Streamlit dashboard is hosted separately.
-
-### Deployment URLs
-
-**Cloud API:**
-
-https://urbansound-api-44471.containers.snapdeploy.app
-
-**API documentation:**
-
-https://urbansound-api-44471.containers.snapdeploy.app/docs
-
-**Health endpoint:**
-
-https://urbansound-api-44471.containers.snapdeploy.app/health
-
-**Streamlit dashboard:**
-
-https://davy-mlopsummative.streamlit.app/
+All three configurations recorded zero failures in the reported Locust runs. However, increasing the number of API containers did not improve throughput in this experiment. The one-container configuration achieved the highest throughput at 5.0 requests per second and the lowest p95 latency at 3.2 seconds. The two- and three-container configurations experienced substantially higher tail latency and lower throughput.
 
 ### API deployment configuration
 
@@ -434,8 +397,6 @@ The status response after two successful prediction requests reported:
 
 A direct cloud prediction request also returned HTTP 200 with a valid prediction and class probability distribution. Its reported inference latency was 140.3 ms.
 
-The test audio file from the `air_conditioner` category was classified as `jackhammer` with 93.55% confidence. This is a model misclassification, not an API or deployment failure.
-
 The API and Streamlit-to-API integration were therefore verified successfully.
 
 Deployment screenshots and JSON responses are retained in the `evidence/` directory.
@@ -463,21 +424,3 @@ It combines audio preprocessing, CNN model training, model evaluation, version m
 The experiments demonstrate measurable improvement through retraining and provide practical evidence of how deployment resources and container configuration affect inference performance and scalability.
 
 The final cloud deployment successfully serves prediction requests through the FastAPI backend, with the Streamlit dashboard communicating with the deployed API.
-
-## 14. Demonstration Video
-
-**Video link:** ADD YOUTUBE VIDEO URL
-
-The demonstration should show:
-
-1. Project architecture and dataset.
-2. Model evaluation results.
-3. Single-file audio prediction.
-4. Prediction probabilities and visualizations.
-5. Bulk audio upload.
-6. Model retraining.
-7. Model version and registry.
-8. API health and monitoring.
-9. Docker services.
-10. Locust load-testing results.
-11. Cloud API deployment and health verification.
