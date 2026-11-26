@@ -12,6 +12,7 @@ import numpy as np
 import soundfile as sf
 from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Request
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src import model as ml
@@ -20,6 +21,25 @@ from src.config import AUTO_RETRAIN_THRESHOLD, CLASSES, UPLOAD_DIR
 
 app = FastAPI(title="UrbanSound8K Classifier API")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+@app.middleware("http")
+async def request_diagnostics(request: Request, call_next):
+    print(
+        f"REQUEST START: {request.method} {request.url.path}",
+        flush=True
+    )
+
+    try:
+        response = await call_next(request)
+        print(
+            f"REQUEST END: {request.method} {request.url.path} "
+            f"status={response.status_code}",
+            flush=True
+        )
+        return response
+    except Exception as exc:
+        print(f"REQUEST ERROR: {type(exc).__name__}: {exc}", flush=True)
+        raise
 
 STARTED = time.time()
 latencies = deque(maxlen=500)
@@ -96,22 +116,37 @@ def metrics():
          "accuracy": v["metrics"]["accuracy"], "f1_macro": v["metrics"]["f1_macro"]}
         for v in reg["versions"]]}
 
+
 @app.post("/predict")
 def predict(file: UploadFile = File(...), spectrogram: bool = Query(False)):
+    print("PREDICT: endpoint entered", flush=True)
+
     data = file.file.read()
+    print(f"PREDICT: upload read ({len(data)} bytes)", flush=True)
+
     t0 = time.perf_counter()
     try:
-        result = prediction.predict(io.BytesIO(data), return_spectrogram=spectrogram)
+        result = prediction.predict(
+            io.BytesIO(data),
+            return_spectrogram=spectrogram
+        )
+        print("PREDICT: inference completed", flush=True)
+
     except FileNotFoundError:
         raise HTTPException(503, "No trained model yet. POST /train first.")
+
     except Exception as exc:
         counters["errors"] += 1
+        print(f"PREDICT ERROR: {type(exc).__name__}: {exc}", flush=True)
         raise HTTPException(400, f"Could not process audio: {exc}")
+
     dt_s = time.perf_counter() - t0
     latencies.append(dt_s)
     counters["predictions"] += 1
     result["latency_ms"] = round(dt_s * 1000, 1)
+
     return result
+
 
 def _save_wav(data: bytes, label: str):
     try:
