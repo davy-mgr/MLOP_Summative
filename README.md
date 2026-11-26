@@ -1,12 +1,18 @@
 ﻿# UrbanSound8K Sound Classification — End-to-End MLOps Pipeline
 
-**Video demonstration:** `ADD YOUTUBE VIDEO URL`  
-**Cloud API:** https://urbansound-api-44471.containers.snapdeploy.app  
-**API documentation:** https://urbansound-api-44471.containers.snapdeploy.app/docs  
-**Dashboard:** Run locally at http://localhost:8501  
+**Video demonstration:** ADD YOUTUBE VIDEO URL
+
+**Cloud API:** https://urbansound-api-44471.containers.snapdeploy.app
+
+**API documentation:** https://urbansound-api-44471.containers.snapdeploy.app/docs
+
+**Streamlit dashboard:** https://davy-mlopsummative.streamlit.app/
+
 **GitHub repository:** https://github.com/davy-mgr/MLOP_Summative
 
-## 1. Project overview
+---
+
+## 1. Project Overview
 
 This project implements an end-to-end MLOps pipeline for classifying environmental audio recordings into ten urban sound categories using the UrbanSound8K dataset.
 
@@ -25,13 +31,15 @@ The ten supported classes are:
 - Siren
 - Street music
 
-The project demonstrates the complete machine learning lifecycle, including data acquisition, audio preprocessing, model development, evaluation, model versioning, prediction serving, bulk data ingestion, retraining, containerization, deployment, monitoring, and load testing.
+The project demonstrates the machine learning lifecycle, including data acquisition, audio preprocessing, model development, evaluation, model versioning, prediction serving, bulk data ingestion, retraining, containerization, cloud deployment, monitoring, and load testing.
 
 ### Problem and use case
 
-Urban environments contain different sources of environmental noise, including traffic, construction activities, machinery, and public activity. Identifying these sound sources can support urban noise monitoring and environmental assessment. This project demonstrates how machine learning can automatically classify short environmental audio recordings, providing a foundation for systems that monitor sound patterns and help identify potentially disruptive noise sources.
+Urban environments contain different sources of environmental noise, including traffic, construction activities, machinery, and public activity. Identifying these sound sources can support urban noise monitoring and environmental assessment.
 
-## 2. System architecture
+This project demonstrates how machine learning can automatically classify short environmental audio recordings, providing a foundation for systems that monitor sound patterns and identify potentially disruptive noise sources.
+
+## 2. System Architecture
 
 The application consists of four main components:
 
@@ -42,14 +50,14 @@ The application consists of four main components:
 
 ### Prediction workflow
 
-1. A user uploads a WAV audio file.
+1. A user uploads a WAV audio file through the dashboard or API.
 2. The API reads the audio and loads the trained model.
-3. Audio is resampled to 22,050 Hz, converted to mono, and standardized to four seconds.
+3. Audio is converted to mono, resampled to 22,050 Hz, and standardized to four seconds.
 4. A 64-band log-mel spectrogram is extracted.
 5. The CNN predicts probabilities for the ten classes.
 6. The API returns the predicted class, confidence, class probabilities, and prediction latency.
 
-## 3. Repository structure
+## 3. Repository Structure
 
 ```text
 MLOP_Summative/
@@ -88,6 +96,13 @@ MLOP_Summative/
 │   ├── containers_2_stats.csv
 │   └── containers_3_stats.csv
 │
+├── evidence/
+│   ├── evidence_streamlit_prediction.png
+│   ├── evidence_api_status.png
+│   ├── evidence_api_prediction.png
+│   ├── evidence_api_status.json
+│   └── evidence_api_prediction.json
+│
 ├── Dockerfile
 ├── Dockerfile.api
 ├── Dockerfile.ui
@@ -98,11 +113,9 @@ MLOP_Summative/
 └── README.md
 ```
 
-## 4. Dataset and preprocessing
+## 4. Dataset and Preprocessing
 
 The project uses the UrbanSound8K dataset.
-
-The dataset is organized into class-specific directories and divided into training and testing partitions.
 
 | Dataset partition | Audio files |
 |---|---:|
@@ -110,7 +123,7 @@ The dataset is organized into class-specific directories and divided into traini
 | Testing | 837 |
 | Total | 8,732 |
 
-The preprocessing pipeline performs the following operations:
+The preprocessing pipeline performs:
 
 - Audio loading and decoding.
 - Conversion to mono.
@@ -127,9 +140,9 @@ The resulting model input shape is:
 (64, 173, 1)
 ```
 
-The dataset is not included in the Git repository. Users must obtain UrbanSound8K separately and generate the training and testing directories.
+The dataset is not included in the Git repository. Users must obtain UrbanSound8K separately and prepare the training and testing directories.
 
-## 5. Installation and execution
+## 5. Installation and Execution
 
 ### Requirements
 
@@ -156,9 +169,11 @@ For a compatible Python 3.11 environment:
 
 ```powershell
 py -3.11 -m venv .venv
+
 .\.venv\Scripts\Activate.ps1
 
 python -m pip install --upgrade pip
+
 pip install -r requirements-dev.txt
 ```
 
@@ -184,6 +199,7 @@ In another terminal:
 
 ```powershell
 $env:API_URL="http://localhost:8000"
+
 streamlit run app/streamlit_app.py
 ```
 
@@ -193,7 +209,7 @@ http://localhost:8501
 
 ### Docker deployment
 
-Build and start the application:
+Build and start the local services:
 
 ```powershell
 docker compose up --build
@@ -207,7 +223,7 @@ The local services are available at:
 | API through Nginx | http://localhost:8000 |
 | API documentation | http://localhost:8000/docs |
 
-## 6. Model development and evaluation
+## 6. Model Development and Evaluation
 
 A CNN architecture is trained using log-mel spectrogram features to distinguish between the ten environmental sound categories.
 
@@ -231,7 +247,7 @@ The following results were obtained from the project's model evaluation and retr
 | Macro F1-score | 79.48% | 81.29% |
 | Loss | 0.8078 | 0.7168 |
 
-Version 2 was produced through a retraining experiment that incorporated three additional audio files.
+Version 2 was produced through a retraining experiment incorporating three additional audio files.
 
 Compared with Version 1:
 
@@ -242,7 +258,9 @@ Compared with Version 1:
 
 These results demonstrate the model versioning and retraining workflow.
 
-## 7. Model versioning and retraining
+**Deployment distinction:** The currently deployed cloud API reports model version 1, with an accuracy of approximately 78.38%. Version 2 results are reported as a separate retraining experiment.
+
+## 7. Model Versioning and Retraining
 
 The application supports model version management through a model registry.
 
@@ -263,7 +281,7 @@ The configured automatic retraining threshold is 50 uploaded files.
 
 A candidate model is promoted only when its test accuracy is within two percentage points of the existing model's accuracy.
 
-## 8. API endpoints
+## 8. API Endpoints
 
 The FastAPI service exposes the following endpoints:
 
@@ -291,7 +309,7 @@ curl.exe -X POST `
   http://localhost:8000/predict
 ```
 
-Example prediction result:
+Example prediction response:
 
 ```json
 {
@@ -303,7 +321,7 @@ Example prediction result:
 
 The API also returns probabilities for all ten sound categories.
 
-## 9. Dashboard functionality
+## 9. Dashboard Functionality
 
 The Streamlit dashboard provides:
 
@@ -319,7 +337,11 @@ The Streamlit dashboard provides:
 
 The dashboard communicates with the FastAPI backend through the configured `API_URL`.
 
-## 10. Load testing and scalability
+The deployed dashboard is available at:
+
+https://davy-mlopsummative.streamlit.app/
+
+## 10. Load Testing and Scalability
 
 Locust was used to evaluate API performance under simulated concurrent user requests.
 
@@ -347,11 +369,13 @@ This suggests that adding replicas alone does not guarantee improved performance
 
 The benchmark results are retained in the `results/` directory.
 
-## 11. Cloud deployment
+## 11. Cloud Deployment and Verification
 
-The FastAPI backend is deployed using SnapDeploy.
+The FastAPI backend is deployed using SnapDeploy, while the Streamlit dashboard is hosted separately.
 
-**Cloud API URL:**
+### Deployment URLs
+
+**Cloud API:**
 
 https://urbansound-api-44471.containers.snapdeploy.app
 
@@ -363,44 +387,86 @@ https://urbansound-api-44471.containers.snapdeploy.app/docs
 
 https://urbansound-api-44471.containers.snapdeploy.app/health
 
-The API is containerized using `Dockerfile.api`, based on Python 3.11.
+**Streamlit dashboard:**
 
-The deployment uses the following configuration:
+https://davy-mlopsummative.streamlit.app/
+
+### API deployment configuration
 
 - Application: FastAPI.
 - ASGI server: Uvicorn.
 - Container port: 8000.
 - Deployment branch: `main`.
-- Container build context: repository root.
+- API Dockerfile: `Dockerfile.api`.
+- Container memory: 512 MB.
+- Container CPU allocation: 0.25 vCPU.
 
-The Streamlit dashboard can be run locally and configured to communicate with the cloud API by setting `API_URL` to the public API address.
+### Cloud verification results
 
-**Deployment note:** Cloud prediction requests experienced timeouts during testing. The API health endpoint remained responsive. The cloud prediction issue is still under investigation; successful local prediction and Docker testing are documented separately from cloud prediction availability.
+The deployed API was tested using both the Streamlit dashboard and direct HTTP requests.
 
-## 12. Limitations and future improvements
+The health endpoint returned:
+
+```json
+{
+  "status": "ok"
+}
+```
+
+The API status endpoint confirmed:
+
+- Model loaded successfully.
+- Model version 1 active.
+- Prediction requests served successfully.
+- Zero recorded API errors.
+- No pending uploads.
+
+The status response after two successful prediction requests reported:
+
+| Metric | Observed value |
+|---|---:|
+| Model loaded | True |
+| Model version | 1 |
+| Predictions served | 2 |
+| Errors | 0 |
+| Average latency | 732.9 ms |
+| p95 latency | 1,266.2 ms |
+
+A direct cloud prediction request also returned HTTP 200 with a valid prediction and class probability distribution. Its reported inference latency was 140.3 ms.
+
+The test audio file from the `air_conditioner` category was classified as `jackhammer` with 93.55% confidence. This is a model misclassification, not an API or deployment failure.
+
+The API and Streamlit-to-API integration were therefore verified successfully.
+
+Deployment screenshots and JSON responses are retained in the `evidence/` directory.
+
+## 12. Limitations and Future Improvements
 
 Potential improvements include:
 
 - Increasing cloud CPU and memory resources for inference.
-- Optimizing audio decoding and preprocessing.
+- Further optimizing audio decoding and preprocessing.
 - Improving model inference efficiency.
 - Introducing shared storage for uploaded audio and model artifacts.
 - Using persistent storage for model versions and training data.
 - Improving horizontal scaling and request distribution.
 - Expanding retraining experiments with larger batches of newly labeled data.
 - Monitoring prediction latency and resource utilization in production.
+- Improving classification performance for commonly confused sound categories.
 
 ## 13. Conclusion
 
 This project demonstrates an end-to-end MLOps workflow for environmental audio classification.
 
-It combines audio preprocessing, CNN model training, model evaluation, version management, automated API serving, interactive visualization, bulk data ingestion, retraining, Docker containerization, cloud deployment, and load testing.
+It combines audio preprocessing, CNN model training, model evaluation, version management, API serving, interactive visualization, bulk data ingestion, retraining, Docker containerization, cloud deployment, and load testing.
 
 The experiments demonstrate measurable improvement through retraining and provide practical evidence of how deployment resources and container configuration affect inference performance and scalability.
 
-## 14. Demonstration video
+The final cloud deployment successfully serves prediction requests through the FastAPI backend, with the Streamlit dashboard communicating with the deployed API.
 
-**Video link:** `ADD YOUTUBE VIDEO URL`
+## 14. Demonstration Video
+
+**Video link:** ADD YOUTUBE VIDEO URL
 
 The demonstration should show:
 
@@ -410,8 +476,8 @@ The demonstration should show:
 4. Prediction probabilities and visualizations.
 5. Bulk audio upload.
 6. Model retraining.
-7. Model version change and registry.
+7. Model version and registry.
 8. API health and monitoring.
 9. Docker services.
 10. Locust load-testing results.
-11. Cloud API deployment and health check.
+11. Cloud API deployment and health verification.
