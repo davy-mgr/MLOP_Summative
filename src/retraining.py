@@ -1,4 +1,3 @@
-
 import shutil
 
 import tensorflow as tf

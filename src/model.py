@@ -1,4 +1,3 @@
-
 from tensorflow.keras import layers, models, regularizers
 
 from .config import CLASSES, INPUT_SHAPE
@@ -48,7 +47,7 @@ def build_cnn(input_shape=INPUT_SHAPE, n_classes=len(CLASSES)):
     return model
 
 
-# Backward compatibility for existing API and notebook imports.
+# backward compatibility for existing API and notebook imports
 
 from .augmentation import augment_spectrogram as _augment
 from .training import fit_model
@@ -60,7 +59,7 @@ from .model_registry import (
 )
 
 
-# Lazy wrappers prevent circular imports with retraining.py.
+# prevent circular imports with retraining.py.
 
 def count_uploads():
     from .retraining import count_uploads as function

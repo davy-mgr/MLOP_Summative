@@ -77,6 +77,4 @@ def register_model(
 
     return entry
 
-
-# Backward-compatible name for the old private function.
 _register = register_model
