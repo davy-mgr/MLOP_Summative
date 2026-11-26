@@ -89,7 +89,6 @@ def _cache_file(path):
     key = hashlib.md5(str(Path(path).resolve()).encode()).hexdigest()
     return CACHE_DIR / f"{key}.npy"
 
-
 def features_cached(path):
     f = _cache_file(path)
     if f.exists():
