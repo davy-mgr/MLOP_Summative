@@ -35,14 +35,13 @@ def load_audio(source):
     # Keep a maximum of four seconds.
     y = y[:N_SAMPLES]
 
-    # Pad shorter clips to the model's required input length.
     if len(y) < N_SAMPLES:
         y = np.pad(y, (0, N_SAMPLES - len(y)))
 
     return y.astype(np.float32)
 
 
-# Build the same Slaney-normalized mel filter bank used by Librosa.
+# Build the mel filter bank used by Librosa.
 _MEL_FILTER = librosa.filters.mel(
     sr=SR,
     n_fft=N_FFT,
@@ -62,17 +61,13 @@ def mel_db(y, normalize=True):
     y = np.asarray(y, dtype=np.float32)
     y = np.pad(y, (N_FFT // 2, N_FFT // 2), mode="constant")
 
-    # Create overlapping frames without copying the entire signal.
     frames = np.lib.stride_tricks.sliding_window_view(y, N_FFT)[::HOP_LENGTH]
 
-    # Hann-windowed power spectrogram.
     spectrum = rfft(frames * _STFT_WINDOW, axis=-1)
     power = (spectrum.real ** 2 + spectrum.imag ** 2).astype(np.float32)
 
-    # Apply the Librosa-compatible mel filter bank.
     mel = _MEL_FILTER @ power.T
 
-    # Match librosa.power_to_db(ref=1.0, top_db=80.0).
     db = 10.0 * np.log10(np.maximum(mel, 1e-10))
     db = np.maximum(db, db.max() - 80.0)
 

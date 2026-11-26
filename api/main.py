@@ -1,4 +1,3 @@
-
 import gc
 import io
 import sys
@@ -96,7 +95,6 @@ def _now():
 
 
 def start_job(kind, runner, epochs):
-    """Start a background training or retraining job."""
 
     with job_lock:
         if job["running"]:
@@ -131,10 +129,8 @@ def start_job(kind, runner, epochs):
                 flush=True,
             )
 
-            # Release the cached prediction model before training.
             prediction.reload_model()
 
-            # Ask Python to collect unused objects.
             gc.collect()
 
             print(

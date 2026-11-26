@@ -11,7 +11,7 @@ from .preprocessing import features_cached
 
 
 def _read_cached_feature(path):
-    # Load one spectrogram from the existing on-disk feature cache.
+    # Load one spectrogram from the existing cache.
     if hasattr(path, "item"):
         path = path.item()
     if isinstance(path, bytes):
@@ -20,7 +20,7 @@ def _read_cached_feature(path):
 
 
 def _load_feature(path, label):
-    # TensorFlow wrapper: only the current example is loaded into memory.
+    # TensorFlow wrapper
     feature = tf.numpy_function(
         _read_cached_feature,
         [path],
@@ -34,7 +34,6 @@ def _load_feature(path, label):
 def _make_dataset(paths, labels, batch_size, shuffle=False, augment=False):
     dataset = tf.data.Dataset.from_tensor_slices((paths, labels))
 
-    # Shuffle small path/label records, not full spectrogram arrays.
     if shuffle:
         dataset = dataset.shuffle(
             buffer_size=min(len(paths), 512),
@@ -42,7 +41,6 @@ def _make_dataset(paths, labels, batch_size, shuffle=False, augment=False):
             reshuffle_each_iteration=True
         )
 
-    # Decode one cached spectrogram at a time using a single worker.
     dataset = dataset.map(_load_feature, num_parallel_calls=1)
 
     if augment:
