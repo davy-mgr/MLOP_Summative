@@ -75,7 +75,7 @@ def predict(source, return_spectrogram=False):
     print(
         f"PREDICTION: TensorFlow inference took {time.perf_counter() - t0:.2f}s",
         flush=True
-    )
+    ) 
 
     i = int(np.argmax(probs))
     out = {
