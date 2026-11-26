@@ -1,6 +1,6 @@
 ﻿# UrbanSound8K Sound Classification MLOps Pipeline
 
-**Video demonstration:** 
+**Video demonstration:** https://youtu.be/YMYfoWIPesk 
 
 **Cloud API:** https://urbansound-api-44471.containers.snapdeploy.app
 
@@ -280,6 +280,14 @@ The configured automatic retraining threshold is 50 uploaded files.
 
 A candidate model is promoted only when its test accuracy is within two percentage points of the existing model's accuracy.
 
+**Deployment resource note**
+
+The application supports retraining through both the API and dashboard. However, retraining on the current SnapDeploy allocation (512 MB RAM and 0.25 vCPU) has proved unreliable. During cloud retraining attempts, the container restarted before completing the first training epoch.
+
+For reliable retraining, users should prioritize running the retraining workflow locally using the project's Python environment or Docker setup. Start the local API, upload labeled audio files, and trigger retraining through the dashboard or the `/retrain` endpoint. The `/retrain/status` endpoint can be used to monitor progress.
+
+The cloud deployment remains available for API access and prediction, but its current resource allocation should not be considered suitable for reliable model retraining.
+
 ## 8. API Endpoints
 
 The FastAPI service exposes the following endpoints:
@@ -400,6 +408,9 @@ A direct cloud prediction request also returned HTTP 200 with a valid prediction
 The API and Streamlit-to-API integration were therefore verified successfully.
 
 Deployment screenshots and JSON responses are retained in the `evidence/` directory.
+
+## 11. Deployment
+The FastAPI backend is deployed on SnapDeploy. Cloud API health checks and prediction requests were successfully tested. Cloud retraining was also attempted, but the available container resources were insufficient to complete training reliably. Local execution is therefore recommended for retraining experiments.
 
 ## 12. Limitations and Future Improvements
 
