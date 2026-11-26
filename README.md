@@ -1,4 +1,4 @@
-﻿# UrbanSound8K Sound Classification — End-to-End MLOps Pipeline
+﻿# UrbanSound8K Sound Classification MLOps Pipeline
 
 **Video demonstration:** 
 
