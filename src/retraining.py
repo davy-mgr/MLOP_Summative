@@ -12,7 +12,7 @@ from .config import (
 from .evaluation import evaluate, load_test_set
 from .model import build_cnn
 from .model_registry import register_model
-from .preprocessing import load_dataset
+from .preprocessing import load_dataset_index
 from .training import fit_model
 
 
@@ -53,7 +53,7 @@ def merge_uploads():
 
 
 def train_model(epochs=40, progress=None):
-    X, y, groups, _ = load_dataset([TRAIN_DIR])
+    paths, y, groups, _ = load_dataset_index([TRAIN_DIR])
 
     if len(y) == 0:
         raise ValueError(
@@ -64,7 +64,7 @@ def train_model(epochs=40, progress=None):
     model = build_cnn()
 
     history = fit_model(
-        model, X, y, groups,
+        model, paths, y, groups,
         epochs=epochs,
         lr=1e-3,
         progress=progress
@@ -91,7 +91,7 @@ def retrain_model(
             "No uploaded data waiting - upload labelled files first."
         )
 
-    X, y, groups, _ = load_dataset(
+    paths, y, groups, _ = load_dataset_index(
         [TRAIN_DIR, UPLOAD_DIR]
     )
 
@@ -106,7 +106,7 @@ def retrain_model(
         learning_rate = 1e-4
 
     history = fit_model(
-        model, X, y, groups,
+        model, paths, y, groups,
         epochs=epochs,
         lr=learning_rate,
         progress=progress

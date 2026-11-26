@@ -121,3 +121,25 @@ def load_dataset(roots, verbose=True):
     y = np.array([CLASSES.index(c) for _, c in files])
     groups = np.array([Path(p).stem.split("-")[0] for p, _ in files])
     return np.stack(X), y, groups, [p for p, _ in files]
+
+
+def load_dataset_index(roots, verbose=True):
+    # Return file paths and labels without loading spectrograms into RAM.
+    # features_cached() loads or creates each .npy file later, one at a time.
+    roots = [roots] if isinstance(roots, (str, Path)) else roots
+    files = [item for root in roots for item in list_files(root)]
+
+    paths = np.asarray([path for path, _ in files], dtype=str)
+    labels = np.asarray(
+        [CLASSES.index(label) for _, label in files],
+        dtype=np.int64
+    )
+    groups = np.asarray(
+        [Path(path).stem.split("-")[0] for path, _ in files],
+        dtype=str
+    )
+
+    if verbose:
+        print(f"Indexed {len(paths)} audio files; spectrograms will be loaded batch by batch.")
+
+    return paths, labels, groups, paths.tolist()
