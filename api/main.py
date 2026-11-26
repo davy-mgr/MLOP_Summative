@@ -145,7 +145,7 @@ def predict(file: UploadFile = File(...), spectrogram: bool = Query(False)):
     counters["predictions"] += 1
     result["latency_ms"] = round(dt_s * 1000, 1)
 
-    return result
+    return result 
 
 
 def _save_wav(data: bytes, label: str):
